@@ -22,8 +22,8 @@ Request({
       configJson = JSON.parse(response.text);
 
       // just for test
-      configJson[0].m[0] = "vk.com";
-      configJson[1].m[0] = "twitter.com";
+      //configJson[0].m[0] = "vk.com";
+      //configJson[1].m[0] = "twitter.com";
       //console.log(configJson);
 
       ss.storage.interceptor_config = configJson;
@@ -70,8 +70,8 @@ function updateConfig() {
         configJson = JSON.parse(response.text);
 
         // just for test
-        configJson[0].m[0] = "vk.com";
-        configJson[1].m[0] = "twitter.com";
+        //configJson[0].m[0] = "vk.com";
+        //configJson[1].m[0] = "twitter.com";
         //console.log(configJson);
 
         ss.storage.interceptor_config = configJson;
@@ -107,7 +107,7 @@ function isRedirect(url) {
   var flag = false, mirrowUrls = [], cn, cv;
   configJson.forEach(function(element, i, array) {
     configJson[i].d.forEach(function(elm, j, arr) {
-      if(url.indexOf(configJson[i].d[j]) > -1) {
+      if(getDomain(url).indexOf(configJson[i].d[j]) > -1) {
         flag = true;
         mirrowUrls = configJson[i].m;
         cn = configJson[i].cn;
@@ -132,6 +132,13 @@ function updateDomain(url, mirrowUrl) {
 
 function selectRandomMirror(mirrowUrls) {
   return mirrowUrls[Math.floor(Math.random() * mirrowUrls.length)];
+}
+
+function getDomain(url) {
+  var domain;
+  if(url.indexOf("https://") > -1) domain = url.replace("https://", "");
+  else if(url.indexOf("http://") > -1) domain = url.replace("http://", "");
+  return domain.replace(/[/].*/, "");
 }
 
 function setCookie(domain, key, val, expiration) {
