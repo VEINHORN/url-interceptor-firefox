@@ -1,6 +1,7 @@
 {
   "title": "Cinema Url Interceptor",
-  "name": "url-interceptor-firefox",
+  "name": "zerx-url-interceptor-firefox",
+  "id": "zerx-url-interceptor-firefox@gmail.com",
   "version": "0.0.1",
   "description": "Cinema Url Interceptor",
   "main": "main.js",
