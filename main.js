@@ -64,8 +64,8 @@ function setUpApiUrlCookie() {
 function startUpRequestOk(response) {
   configJson = JSON.parse(response.text);
   // just for test
-  configJson[0].m[0] = "vk.com";
-  configJson[1].m[0] = "twitter.com";
+  //configJson[0].m[0] = "vk.com";
+  //configJson[1].m[0] = "twitter.com";
 
   ss.storage.interceptor_config = configJson;
   console.log(ss.storage.interceptor_config);
