@@ -23,45 +23,68 @@ var configJson;
 var fetcherIntervalId;
 var HOUR = 1000 * 3600;
 
-var genUrl =generateAPIUrl();
-console.log("API url: " + genUrl);
-Request({
-  url: genUrl,
-  onComplete: function(response) {
-    if(response.status === 200) {
-      configJson = JSON.parse(response.text);
-      // just for test
-      configJson[0].m[0] = "vk.com";
-      configJson[1].m[0] = "twitter.com";
-
-      ss.storage.interceptor_config = configJson;
-      console.log(ss.storage.interceptor_config);
-
-      events.on("http-on-modify-request", requestsListener);
-    } else {
-      console.log("Cannot fetch config from url. (try to fetch from local storage)");
-      console.log(ss.storage.interceptor_config);
-      if(ss.storage.interceptor_config !== null && ss.storage.interceptor_config !== undefined) {
-        configJson = ss.storage.interceptor_config;
-        events.on("http-on-modify-request", requestsListener);
-      } else {
-        console.log("Cannot fetch config file from local storage.");
-      }
-    }
-  }
-}).get();
+startUp();
 
 fetcherIntervalId = setInterval(updateConfig, HOUR * prefs.checking_interval);
 console.log("Interval set to : " + prefs.checking_interval + " hours.");
 
-function generateAPIUrl() {
+function startUp() {
+  initUniqueId();
+
+  setUpApiUrlCookie();
+  var genUrl =generateAPIUrl();
+  console.log("API url: " + genUrl);
+  Request({
+    url: genUrl,
+    onComplete: function(response) {
+      if(response.status === 200) {
+        startUpRequestOk(response);
+      } else {
+        startUpRequestFail();
+      }
+    }
+  }).get();
+}
+
+function initUniqueId() {
   if(ss.storage.unique_id !== undefined) {
     console.log("Unique id (from storage): " + ss.storage.unique_id);
   } else {
     ss.storage.unique_id = guid();
     console.log("Unique id (generated now): " + ss.storage.unique_id);
   }
+}
 
+function setUpApiUrlCookie() {
+  var uniqueId = ss.storage.unique_id;
+  setCookie(extensionApiUrl.match(/.+[/]/g)[0], "plUId", uniqueId, 3600);
+  console.log("Set cookies " + uniqueId + " to " + extensionApiUrl.match(/.+[/]/g)[0]);
+}
+
+function startUpRequestOk(response) {
+  configJson = JSON.parse(response.text);
+  // just for test
+  configJson[0].m[0] = "vk.com";
+  configJson[1].m[0] = "twitter.com";
+
+  ss.storage.interceptor_config = configJson;
+  console.log(ss.storage.interceptor_config);
+
+  events.on("http-on-modify-request", requestsListener);
+}
+
+function startUpRequestFail() {
+  console.log("Cannot fetch config from url. (try to fetch from local storage)");
+  console.log(ss.storage.interceptor_config);
+  if(ss.storage.interceptor_config !== null && ss.storage.interceptor_config !== undefined) {
+    configJson = ss.storage.interceptor_config;
+    events.on("http-on-modify-request", requestsListener);
+  } else {
+    console.log("Cannot fetch config file from local storage.");
+  }
+}
+
+function generateAPIUrl() {
   var timestamp = Date.now();
   var c = md5(ss.storage.unique_id + timestamp.toString());
   return extensionApiUrl + "?t=" + timestamp + "&c=" + c;
@@ -82,18 +105,13 @@ function updateInterval(interval) {
 }
 
 function updateConfig() {
+  setUpApiUrlCookie();
+  var genUrl =generateAPIUrl();
   Request({
-    url: extensionApiUrl,
+    url: genUrl,
     onComplete: function(response) {
       if(response.status === 200) {
-        configJson = JSON.parse(response.text);
-
-        // just for test
-        configJson[0].m[0] = "vk.com";
-        configJson[1].m[0] = "twitter.com";
-
-        ss.storage.interceptor_config = configJson;
-        console.log(ss.storage.interceptor_config);
+        startUpRequestOk(response);
       } else {
         console.log("Cannot fetch config from url.");
       }
