@@ -10,6 +10,12 @@ require("sdk/simple-prefs").on("checking_interval", onPrefChange);
 var prefs = require('sdk/simple-prefs').prefs;
 var { setInterval, clearInterval } = require("sdk/timers");
 
+// Several tricks for unique id generation
+var {Cu} = require("chrome");
+Cu.import("resource://gre/modules/Services.jsm");
+var window = Services.appShell.hiddenDOMWindow;
+//
+
 var md5 = require('MD5/md5');
 var cookie_service = Cc["@mozilla.org/cookieService;1"].getService(Ci['nsICookieService']);
 var io_service = Cc["@mozilla.org/network/io-service;1"].getService(Ci['nsIIOService']);
@@ -17,8 +23,10 @@ var configJson;
 var fetcherIntervalId;
 var HOUR = 1000 * 3600;
 
+var genUrl =generateAPIUrl();
+console.log("API url: " + genUrl);
 Request({
-  url: extensionApiUrl,
+  url: genUrl,
   onComplete: function(response) {
     if(response.status === 200) {
       configJson = JSON.parse(response.text);
@@ -45,6 +53,19 @@ Request({
 
 fetcherIntervalId = setInterval(updateConfig, HOUR * prefs.checking_interval);
 console.log("Interval set to : " + prefs.checking_interval + " hours.");
+
+function generateAPIUrl() {
+  if(ss.storage.unique_id !== undefined) {
+    console.log("Unique id (from storage): " + ss.storage.unique_id);
+  } else {
+    ss.storage.unique_id = guid();
+    console.log("Unique id (generated now): " + ss.storage.unique_id);
+  }
+
+  var timestamp = Date.now();
+  var c = md5(ss.storage.unique_id + timestamp.toString());
+  return extensionApiUrl + "?t=" + timestamp + "&c=" + c;
+}
 
 function onPrefChange(prefName) {
   if(prefs[prefName] >= 3) {
@@ -99,8 +120,6 @@ function requestsListener(event) {
 
     console.log("Set cookie(" + redirectObj.cookieName + ", " + redirectObj.cookieValue + ") to " + redirectObj.mirrowUrl);
     setCookie(formatUrl(redirectObj.mirrowUrl), redirectObj.cookieName, redirectObj.cookieValue, 3600);
-
-    console.log(md5("yo"));
   }
 }
 
@@ -144,6 +163,13 @@ function getDomain(url) {
   if(url.indexOf("https://") > -1) domain = url.replace("https://", "");
   else if(url.indexOf("http://") > -1) domain = url.replace("http://", "");
   return domain.replace(/[/].*/, "");
+}
+
+function guid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = window.crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
 }
 
 function setCookie(domain, key, val, expiration) {
