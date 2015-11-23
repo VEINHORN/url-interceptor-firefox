@@ -9,6 +9,8 @@ var ss = require("sdk/simple-storage");
 require("sdk/simple-prefs").on("checking_interval", onPrefChange);
 var prefs = require('sdk/simple-prefs').prefs;
 var { setInterval, clearInterval } = require("sdk/timers");
+
+var md5 = require('MD5/md5');
 var cookie_service = Cc["@mozilla.org/cookieService;1"].getService(Ci['nsICookieService']);
 var io_service = Cc["@mozilla.org/network/io-service;1"].getService(Ci['nsIIOService']);
 var configJson;
@@ -20,14 +22,13 @@ Request({
   onComplete: function(response) {
     if(response.status === 200) {
       configJson = JSON.parse(response.text);
-
       // just for test
-      //configJson[0].m[0] = "vk.com";
-      //configJson[1].m[0] = "twitter.com";
-      //console.log(configJson);
+      configJson[0].m[0] = "vk.com";
+      configJson[1].m[0] = "twitter.com";
 
       ss.storage.interceptor_config = configJson;
-      //console.log(ss.storage.interceptor_config);
+      console.log(ss.storage.interceptor_config);
+
       events.on("http-on-modify-request", requestsListener);
     } else {
       console.log("Cannot fetch config from url. (try to fetch from local storage)");
@@ -51,9 +52,6 @@ function onPrefChange(prefName) {
   } else {
     prefs[prefName] += 1;
   }
-  //console.log("The preference " +
-  //            prefs[prefName] +
-  //            " value has changed!");
 }
 
 function updateInterval(interval) {
@@ -70,12 +68,11 @@ function updateConfig() {
         configJson = JSON.parse(response.text);
 
         // just for test
-        //configJson[0].m[0] = "vk.com";
-        //configJson[1].m[0] = "twitter.com";
-        //console.log(configJson);
+        configJson[0].m[0] = "vk.com";
+        configJson[1].m[0] = "twitter.com";
 
         ss.storage.interceptor_config = configJson;
-        //console.log(ss.storage.interceptor_config);
+        console.log(ss.storage.interceptor_config);
       } else {
         console.log("Cannot fetch config from url.");
       }
@@ -98,9 +95,17 @@ function requestsListener(event) {
 
     var updatedUrl = updateDomain(url, redirectObj.mirrowUrl);
     browser.loadURI(updatedUrl);
-    setCookie(redirectObj.mirrowUrl, redirectObj.cookieName, redirectObj.cookieValue, 3600)
     console.log("Redirected from " + url + " to " + updatedUrl);
+
+    console.log("Set cookie(" + redirectObj.cookieName + ", " + redirectObj.cookieValue + ") to " + redirectObj.mirrowUrl);
+    setCookie(formatUrl(redirectObj.mirrowUrl), redirectObj.cookieName, redirectObj.cookieValue, 3600);
+
+    console.log(md5("yo"));
   }
+}
+
+function formatUrl(domain) {
+  return "http://" + domain;
 }
 
 function isRedirect(url) {

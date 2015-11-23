@@ -16,10 +16,14 @@
   ],
   "preferences": [
     {
-        "description": "Интервал проверки зеркал",
-        "name": "checking_interval",
-        "type": "integer",
-        "value": 6,
-        "title": "Интервал проверки зеркал"
-    }]
+      "description": "Интервал проверки зеркал",
+      "name": "checking_interval",
+      "type": "integer",
+      "value": 6,
+      "title": "Интервал проверки зеркал"
+    }
+  ],
+  "dependencies": {
+    "MD5": "^1.3.0"
+  }
 }
