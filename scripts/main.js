@@ -1,4 +1,4 @@
-var extensionApiUrl = "http://vulkaninfo.com/extAPI.php";
+var extensionApiUrl = " http://domainunlocker.com/update";
 const { Cc, Ci, Cr } = require("chrome");
 var self = require('sdk/self');
 var Request = require("sdk/request").Request;
